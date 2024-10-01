@@ -1,11 +1,8 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import sys
 
-sys.path.append('../features')
-
-from features.preprocessing_utils import process_rates, process_options
+from preprocessing_utils import process_rates, process_options
 from data_utils import read_files
 
 
@@ -31,9 +28,9 @@ def get_model_dataset(path_opt, filenames_opt, path_r, filenames_r, call = True)
 
 
 def create_csv(first_year, last_year):
-    path_opt = "../../data/raw/"
+    path_opt = "data/raw/"
     filenames_opt = ["spx_eod_" + str(year) + (str(month) if month >= 10 else "0"+str(month)) +".txt" for year in range(first_year-1, last_year+1) for month in range(1, 13)]
-    path_r = "../../data/raw/"
+    path_r = "data/raw/"
 
     filenames_r = ["yield-curve-rates-1990-2023.csv"]
     
@@ -44,7 +41,7 @@ def create_csv(first_year, last_year):
     df = df[df["Quote_date"] >= f"{str(first_year)}-04-01"]
     df = df[df["Quote_date"] <= f"{str(last_year)}-12-31"]
 
-    filename = f"../../data/processed/{first_year}-{last_year}_underlying-strike_only-price.csv"
+    filename = f"data/processed/{first_year}-{last_year}_underlying-strike_only-price.csv"
 
     filepath = Path(filename)  
     filepath.parent.mkdir(parents=True, exist_ok=True)  

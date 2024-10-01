@@ -1,2 +1,4 @@
 *.txt
 *.csv
+src/models/secret.py
+__pycache__
