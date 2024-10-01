@@ -19,8 +19,20 @@ Do a hyperparameter search by running src/models/hyperparam_sweep.py from root w
 
 Step 4: Training models
 
-Train the different models in the src/models folder
+Train the different models with the src/models/main.py file. Make sure to change the config as specified.
 
-Step 5: Report results 
+Step 5: Adding benchmarks
+
+After training the models. Run src/models/naive_and_BS.py to add naive and black-scholes benchmark. This has to be done after training the MLP.
+
+Step 6: Report results 
 
 The models are evaluated and compared in notebooks/compare.ipynb and the data is summarized in notebooks/tables.ipynb
+
+
+# Other
+
+- To get a key to perform the hyperparameter sweep you have to create a user at https://wandb.ai/site.
+- The notebooks contains much of the same code as the scripts in the src-folder.
+- While all scripts should be run from root, run the notebooks from the folder they are in.
+- The notebooks does not contain any extra functionality than what is in the src-folder, so they do not have to be run.
