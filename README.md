@@ -27,7 +27,7 @@ After training the models. Run src/models/naive_and_BS.py to add naive and black
 
 Step 6: Report results 
 
-The models are evaluated and compared in notebooks/compare.ipynb and the data is summarized in notebooks/tables.ipynb
+The models are evaluated and compared in src/visualization/results.py and the data is summarized in src/visualization/data_summary.py
 
 
 # Other
