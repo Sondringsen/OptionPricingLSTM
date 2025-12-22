@@ -11,7 +11,6 @@ def read_file(file):
 
 def create_df_high_mid_low():
     df_options = read_file("models/predictions/all_predictions.csv")
-    df_options = df_options.rename(columns={"MLP-GARCH": "MLP-GJR-GARCH"})
 
     df_low_money = df_options[df_options["Underlying_last"] / df_options["Strike"] < 0.97]
     df_low_money.name = "<0.97"
@@ -24,19 +23,20 @@ def create_df_high_mid_low():
 
 
 def rmse_table(df_options, df_high_money, df_mid_money, df_low_money):
-    df_RMSE = pd.DataFrame(columns=['Moneyness', 'Maturity', 'BS', 'BS-GJR-GARCH', 'MLP', 'MLP-GJR-GARCH', 'LSTM'])
+    df_RMSE = pd.DataFrame(columns=['Moneyness', 'Maturity', 'BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH'])
     loss = tf.keras.losses.MeanSquaredError()
     for dataframex in [df_low_money, df_mid_money, df_high_money]:
         i = 1
         for days in [89,89,89,179,179,454]:
             df_temp = dataframex[(df_options["Ttl"] >= i) & (df_options["Ttl"] <= i + 89)]
             bs = np.sqrt(loss.call(df_temp["Price"], df_temp["BS"]))
-            bs_garch = np.sqrt(loss.call(df_temp["Price"], df_temp["BS-GJR-GARCH"]))
+            bs_garch = np.sqrt(loss.call(df_temp["Price"], df_temp["BS-GARCH"]))
             mlp = np.sqrt(loss.call(df_temp["Price"], df_temp["MLP"]))
-            mlp_garch = np.sqrt(loss.call(df_temp["Price"], df_temp["MLP-GJR-GARCH"]))
+            mlp_garch = np.sqrt(loss.call(df_temp["Price"], df_temp["MLP-GARCH"]))
             lstm = np.sqrt(loss.call(df_temp["Price"], df_temp["LSTM"]))
+            lstm_garch = np.sqrt(loss.call(df_temp["Price"], df_temp["LSTM-GARCH"]))
 
-            df_RMSE.loc[len(df_RMSE.index)] = [dataframex.name, str(i) + "-" + str(i + days), bs, bs_garch, mlp, mlp_garch, lstm]
+            df_RMSE.loc[len(df_RMSE.index)] = [dataframex.name, str(i) + "-" + str(i + days), bs, bs_garch, mlp, mlp_garch, lstm, lstm_garch]
             i = i + days + 1 
 
     with open('reports/2021_results_RMSE.tex', 'w') as result_file:
@@ -44,44 +44,64 @@ def rmse_table(df_options, df_high_money, df_mid_money, df_low_money):
 
 
 def mae_table(df_options, df_high_money, df_mid_money, df_low_money):
-    df_MAE = pd.DataFrame(columns=['Moneyness', 'Maturity', 'BS', 'BS-GJR-GARCH', 'MLP', 'MLP-GJR-GARCH', 'LSTM'])
+    df_MAE = pd.DataFrame(columns=['Moneyness', 'Maturity', 'BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH'])
     loss = tf.keras.losses.MeanAbsoluteError()
     for dataframex in [df_low_money, df_mid_money, df_high_money]:
         i = 1
         for days in [89,89,89,179,179,454]:
             df_temp = dataframex[(df_options["Ttl"] >= i) & (df_options["Ttl"] <= i + 89)]
             bs = (loss.call(df_temp["Price"], df_temp["BS"])).numpy()
-            bs_garch = (loss.call(df_temp["Price"], df_temp["BS-GJR-GARCH"])).numpy()
+            bs_garch = (loss.call(df_temp["Price"], df_temp["BS-GARCH"])).numpy()
             mlp = (loss.call(df_temp["Price"], df_temp["MLP"])).numpy()
-            mlp_garch = (loss.call(df_temp["Price"], df_temp["MLP-GJR-GARCH"])).numpy()
+            mlp_garch = (loss.call(df_temp["Price"], df_temp["MLP-GARCH"])).numpy()
             lstm = (loss.call(df_temp["Price"], df_temp["LSTM"])).numpy()
-            df_MAE.loc[len(df_MAE.index)] = [dataframex.name, str(i) + "-" + str(i + days), bs, bs_garch, mlp, mlp_garch, lstm]
+            lstm_garch = (loss.call(df_temp["Price"], df_temp["LSTM-GARCH"])).numpy()
+
+            df_MAE.loc[len(df_MAE.index)] = [dataframex.name, str(i) + "-" + str(i + days), bs, bs_garch, mlp, mlp_garch, lstm, lstm_garch]
             i = i + days + 1 
 
     with open('reports/2021_results_MAE.tex', 'w') as result_file:
         result_file.write(df_MAE.to_latex(index=False, float_format="%.2f"))
 
 def mape_table(df_options, df_high_money, df_mid_money, df_low_money):
-    df_MAPE = pd.DataFrame(columns=['Moneyness', 'Maturity', 'BS', 'BS-GJR-GARCH', 'MLP', 'MLP-GJR-GARCH', 'LSTM'])
+    df_MAPE = pd.DataFrame(columns=['Moneyness', 'Maturity', 'BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH'])
     loss = tf.keras.losses.MeanAbsolutePercentageError()
     for dataframex in [df_low_money, df_mid_money, df_high_money]:
         i = 1
         for days in [89,89,89,179,179,454]:
             df_temp = dataframex[(df_options["Ttl"] >= i) & (df_options["Ttl"] <= i + 89)]
             bs = (loss.call(df_temp["Price"], df_temp["BS"])).numpy()
-            bs_garch = (loss.call(df_temp["Price"], df_temp["BS-GJR-GARCH"])).numpy()
+            bs_garch = (loss.call(df_temp["Price"], df_temp["BS-GARCH"])).numpy()
             mlp = (loss.call(df_temp["Price"], df_temp["MLP"])).numpy()
-            mlp_garch = (loss.call(df_temp["Price"], df_temp["MLP-GJR-GARCH"])).numpy()
+            mlp_garch = (loss.call(df_temp["Price"], df_temp["MLP-GARCH"])).numpy()
             lstm = (loss.call(df_temp["Price"], df_temp["LSTM"])).numpy()
-            df_MAPE.loc[len(df_MAPE.index)] = [dataframex.name, str(i) + "-" + str(i + days), bs, bs_garch, mlp, mlp_garch, lstm]
+            lstm_garch = (loss.call(df_temp["Price"], df_temp["LSTM-GARCH"])).numpy()
+            
+            df_MAPE.loc[len(df_MAPE.index)] = [dataframex.name, str(i) + "-" + str(i + days), bs, bs_garch, mlp, mlp_garch, lstm, lstm_garch]
             i = i + days + 1 
 
     with open('reports/2021_results_MAPE.tex', 'w') as result_file:
         result_file.write(df_MAPE.to_latex(index=False, float_format="%.2f"))
+
+def loss_full_models(df_options):
+
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
+    full_models = pd.DataFrame(columns=models, index=["RMSE", "MAE"])
+
+    mse = tf.keras.losses.MeanSquaredError()
+    mae = tf.keras.losses.MeanAbsoluteError()
+
+    for model in models:
+        full_models.loc["RMSE", model] = np.sqrt((mse.call(df_options["Price"], df_options[model])).numpy())
+        full_models.loc["MAE", model] = (mae.call(df_options["Price"], df_options[model])).numpy()
+
+
+    with open('reports/2021_results_full_model.tex', 'w') as result_file:
+        result_file.write(full_models.to_latex(index=True, float_format="%.2f"))
     
 
 def bias_var_cov(df_options):
-    models = ['BS', 'BS-GJR-GARCH', 'MLP', 'MLP-GJR-GARCH', 'LSTM']
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
     bias_var_cov = pd.DataFrame(columns=["Model", "Bias", "Variance", "Covariance"])
 
     for i, model in enumerate(models):
@@ -96,7 +116,7 @@ def bias_var_cov(df_options):
         result_file.write(bias_var_cov.to_latex(index=False, escape=False))
 
 def dm_table(df_options):
-    models = ['BS', 'BS-GJR-GARCH', 'MLP', 'MLP-GJR-GARCH', 'LSTM']
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
     dm_df_stat = pd.DataFrame(columns=models, index=models)
     dm_df_p = pd.DataFrame(columns=models, index=models)
 
@@ -130,7 +150,7 @@ def dm_table(df_options):
         result_file.write(df_with_stars.to_latex(index=True, float_format="%.3f"))
 
 def theil_u_table(df_options):
-    models = ['BS', 'BS-GJR-GARCH', 'MLP', 'MLP-GJR-GARCH', 'LSTM']
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
     theil_u = pd.DataFrame(columns=["Model", "Theil U"])
 
     for i, model in enumerate(models):
@@ -142,7 +162,7 @@ def theil_u_table(df_options):
 
 def plot_rmse_by_ttl(df_options):
     # Assuming df_options is already loaded and contains the relevant data
-    models = ["BS", "BS-GJR-GARCH", "MLP", "MLP-GJR-GARCH", "LSTM"]
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
 
     # Define the intervals for the "Ttl" column
     bins = [1, 90, 180, 270, 450, 630, 1085]
@@ -177,7 +197,7 @@ def plot_rmse_by_ttl(df_options):
 def plot_rmse_by_moneyness(df_options):
     df_options["Moneyness"] = df_options["Underlying_last"] / df_options["Strike"]
     # Assuming df_options is already loaded and contains the relevant data
-    models = ["BS", "BS-GJR-GARCH", "MLP", "MLP-GJR-GARCH", "LSTM"]
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
 
     # Define the intervals for the "Ttl" column
     bins = [0.5, 0.6, 0.7, 0.95, 1.05, 1.15, 1.5, 4.0, 8.0, 42.0]
@@ -212,7 +232,7 @@ def plot_rmse_by_moneyness(df_options):
 
 def plot_rmse_by_month(df_options):
     # Assuming df_options is already loaded and contains the relevant data
-    models = ["BS", "BS-GJR-GARCH", "MLP", "MLP-GJR-GARCH", "LSTM"]
+    models = ['BS', 'BS-GARCH', 'MLP', 'MLP-GARCH', 'LSTM', 'LSTM-GARCH']
 
     # Extract the month from the "Quote_date" column
     df_options["Quote_date"] = pd.to_datetime(df_options["Quote_date"])
@@ -249,6 +269,7 @@ def main():
     rmse_table(df_options, df_high_money, df_mid_money, df_low_money)
     mae_table(df_options, df_high_money, df_mid_money, df_low_money)
     mape_table(df_options, df_high_money, df_mid_money, df_low_money)
+    loss_full_models(df_options)
     bias_var_cov(df_options)
     dm_table(df_options)
     theil_u_table(df_options)

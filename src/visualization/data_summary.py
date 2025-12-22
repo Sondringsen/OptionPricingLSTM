@@ -8,18 +8,19 @@ def create_data_summary_table():
     df_read = read_file("data/processed/2019-2021_underlying-strike_only-price.csv")
     df_read = df_read.loc[df_read.loc[:, "Quote_date"] >= "2020-04-01", :]
 
-    df_read["Moneyness"] = "0.97-1.03"
-    df_read.loc[df_read.loc[:, "Underlying_last"]/df_read.loc[:, "Strike"] < 0.97, "Moneyness"] = "<0.97"
-    df_read.loc[df_read.loc[:, "Underlying_last"]/df_read.loc[:, "Strike"] > 1.03, "Moneyness"] = ">1.03"
+    df_read["Moneyness1"] = "0.97-1.03"
+    df_read["Moneyness"] = df_read["Underlying_last"]/df_read["Strike"]
+    df_read.loc[df_read.loc[:, "Underlying_last"]/df_read.loc[:, "Strike"] < 0.97, "Moneyness1"] = "<0.97"
+    df_read.loc[df_read.loc[:, "Underlying_last"]/df_read.loc[:, "Strike"] > 1.03, "Moneyness1"] = ">1.03"
 
-    df_group_moneyness = df_read.groupby(by="Moneyness")
+    df_group_moneyness = df_read.groupby(by="Moneyness1")
 
-    level_1 = ["Price", "Underlying_last", "Ttl", "Volatility", "R"] 
+    level_1 = ["Price", "Strike", "Underlying_last", "Ttl", "Volatility", "R", "Moneyness"] 
     level_2 = ["count", "mean", "std", "min", "25%", "50%", "75%", "max"]  
     index = pd.MultiIndex.from_product([level_1, level_2], names=["Feature", "Statistic"])
 
     level_3 = ["<0.97", "0.97-1.03", ">1.03"]
-    columns = pd.Index(level_3, name="Moneyness")
+    columns = pd.Index(level_3, name="Moneyness1")
 
     df_summary = pd.DataFrame(index=index, columns=columns)
 
@@ -74,12 +75,29 @@ def create_config_tables():
         "Optimizer": "AdamW",
     }
 
+    config_lstm_garch = {
+        "Layers": 4,
+        "Units per layer": 32,
+        "Learning rate": 0.0012930813401443829,
+        "Weight decay": 0.00005187188064474824,
+        "BN momentum" : 0.001873745946822547,
+        "Minibatch size": 4096,
+        "Epochs": "Early stopping",
+        "Activation function": "ReLU",
+        "Optimizer": "AdamW",
+    }
+
+    
     lstm_hyper = pd.DataFrame.from_dict(config_lstm, orient="index")
+    lstm_garch_hyper = pd.DataFrame.from_dict(config_lstm_garch, orient="index")
     mlp_hyper = pd.DataFrame.from_dict(config_mlp, orient="index")
     mpl_garch_hyper = pd.DataFrame.from_dict(config_mlp_garch, orient="index")
 
     with open('reports/LSTM_hyperparameters.tex', 'w') as f:
         f.write(lstm_hyper.to_latex())
+
+    with open('reports/LSTM_GARCH_hyperparameters.tex', 'w') as f:
+        f.write(lstm_garch_hyper.to_latex())
 
     with open('reports/MLP_hyperparameters.tex', 'w') as f:
         f.write(mlp_hyper.to_latex())
